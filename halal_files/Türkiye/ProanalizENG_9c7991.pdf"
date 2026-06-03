@@ -1,0 +1,160 @@
+﻿<!doctype html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Internal Server Error</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300&amp;subset=latin-ext" rel="stylesheet">
+    <style>
+        html {
+            line-height: 1.15;
+            -webkit-text-size-adjust: 100%;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue"
+        }
+
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+
+        err {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+
+        }
+
+
+        err img {
+            margin-bottom: 100px;
+
+        }
+
+        .err-line {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 30px;
+        }
+
+        err h2 {
+            font-size: 5rem;
+            font-weight: 300;
+            color: #d8bd88;
+            margin: 0;
+            line-height: 1;
+
+        }
+
+
+
+        err p {
+            color: #09376b;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1;
+        }
+
+        err a {
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+
+        err a[go-home],
+        err a[go-home]:visited,
+        err a[go-home]:focus,
+
+        err a[go-home]:active {
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #09376b;
+            font-weight: 500;
+            color: #fff;
+            display: inline-block;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        err a[go-home]:hover {
+            background-color: #0e4c92;
+        }
+
+        err a[go-home]::after {
+            content: " ( "attr(tick) " )";
+        }
+    </style>
+</head>
+
+<body>
+    <err>
+        <img src="/assets/images/logo.png">
+        <div class="err-line">
+            <h2>404</h2>
+            <div class="info">
+                <p err-line></p>
+                <a go-home tick="5" href="/"></a>
+            </div>
+        </div>
+    </err>
+
+
+
+
+
+    <script>
+
+        var err = {
+            "tr": {
+                err: "SAYFA BULUNAMADI",
+                home: "ANA SAYFA"
+            },
+            "other": {
+                err: "PAGE NOT FOUND",
+                home: "HOME PAGE"
+            }
+        }
+
+        // write err
+        var lang = navigator.language || navigator.userLanguage;
+        var detectedLang = lang == 'tr-TR' ? err.tr : err.other;
+        var line = document.querySelectorAll("p[err-line]")[0];
+        line.innerHTML = detectedLang.err;
+
+
+        // write home button
+        var homeBtn = document.querySelectorAll("a[go-home]")[0];
+        homeBtn.innerHTML = detectedLang.home;
+
+        var time = 5;
+        function countDown() {
+            time < 0 ? window.location.href = "/" : homeBtn.setAttribute("tick", time--);
+        }
+
+        setInterval(countDown, 1000)
+
+    </script>
+</body>
+
+</html>

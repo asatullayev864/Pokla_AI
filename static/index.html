@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halal Sertifikatlar — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+    
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/mobile.css">
+    
+    <script src="/js/app.js"></script>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="wrap">
+
+        <!-- ── Header ── -->
+        <header class="ani">
+            <div class="brand">
+                <div class="brand-icon">🕌</div>
+                <div>
+                    <div class="brand-name">HalalTracker</div>
+                    <div class="brand-sub">Akkreditatsiya Monitoring Tizimi</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="pill pill-live">Jonli</span>
+                <span class="pill pill-url" id="api-url-badge">
+                    localhost:8000/api
+                </span>
+            </div>
+        </header>
+
+        <!-- ── Stat Cards ── -->
+        <div class="stats-row">
+            <div class="stat ani d1" style="--stat-color:var(--accent)" onclick="App.filterBy(null)" id="sc-total">
+                <div class="stat-arrow">→</div>
+                <div class="stat-ico">📋</div>
+                <div class="stat-label">Jami</div>
+                <div class="stat-val" id="sv-total">—</div>
+                <div class="stat-hint">Barcha sertifikatlar</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" id="sf-total" style="background:var(--accent);width:100%"></div>
+                </div>
+            </div>
+            <div class="stat ani d2" style="--stat-color:var(--success)" onclick="App.filterBy('active')"
+                id="sc-active">
+                <div class="stat-arrow">→</div>
+                <div class="stat-ico">✅</div>
+                <div class="stat-label">Faol</div>
+                <div class="stat-val" id="sv-active">—</div>
+                <div class="stat-hint" id="sh-active">yuklanmoqda...</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" id="sf-active" style="background:var(--success)"></div>
+                </div>
+            </div>
+            <div class="stat ani d3" style="--stat-color:var(--warn)" onclick="App.filterBy('suspended')"
+                id="sc-suspended">
+                <div class="stat-arrow">→</div>
+                <div class="stat-ico">⏸</div>
+                <div class="stat-label">To'xtatilgan</div>
+                <div class="stat-val" id="sv-suspended">—</div>
+                <div class="stat-hint" id="sh-suspended">yuklanmoqda...</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" id="sf-suspended" style="background:var(--warn)"></div>
+                </div>
+            </div>
+            <div class="stat ani d4" style="--stat-color:var(--danger)" onclick="App.filterBy('withdrawn')"
+                id="sc-withdrawn">
+                <div class="stat-arrow">→</div>
+                <div class="stat-ico">❌</div>
+                <div class="stat-label">Bekor qilingan</div>
+                <div class="stat-val" id="sv-withdrawn">—</div>
+                <div class="stat-hint" id="sh-withdrawn">yuklanmoqda...</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" id="sf-withdrawn" style="background:var(--danger)"></div>
+                </div>
+            </div>
+            <div class="stat ani d5" style="--stat-color:var(--accent3)" onclick="App.switchView('countries')"
+                id="sc-countries">
+                <div class="stat-arrow">→</div>
+                <div class="stat-ico">🌍</div>
+                <div class="stat-label">Davlatlar</div>
+                <div class="stat-val" id="sv-countries">—</div>
+                <div class="stat-hint">Qamrab olingan</div>
+                <div class="stat-bar">
+                    <div class="stat-fill" id="sf-countries" style="background:var(--accent3);width:100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Expiring alert ── -->
+        <div class="alert" id="expiring-bar" style="display:none">
+            <span>⚠️</span>
+            <span id="expiring-txt"></span>
+            <button onclick="App.showExpiring()">Ko'rish</button>
+        </div>
+
+        <!-- ── Toolbar ── -->
+        <div class="toolbar ani">
+            <div class="search-wrap">
+                <span class="search-ico">🔍</span>
+                <input type="text" class="search-inp" id="q" placeholder="Tashkilot, akkreditatsiya raqami, standart..."
+                    oninput="App.onSearch(this.value)" />
+            </div>
+            <select class="flt" id="flt-status" onchange="App.load(1)">
+                <option value="">Barcha statuslar</option>
+                <option value="active">Faol</option>
+                <option value="suspended">To'xtatilgan</option>
+                <option value="withdrawn">Bekor qilingan</option>
+            </select>
+            <select class="flt" id="flt-country" onchange="App.load(1)">
+                <option value="">Barcha davlatlar</option>
+            </select>
+            <div class="tab-group">
+                <button class="tab on" id="tab-list" onclick="App.switchView('list')">☰ Jadval</button>
+                <button class="tab" id="tab-cards" onclick="App.switchView('cards')">⊞ Kartalar</button>
+                <button class="tab" id="tab-countries" onclick="App.switchView('countries')">🌍 Davlatlar</button>
+            </div>
+        </div>
+
+        <!-- ── Active filter badge ── -->
+        <div id="filter-badge-wrap"></div>
+
+        <!-- ── Panels ── -->
+        <div id="view-list">
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">📄 Sertifikatlar <span class="count-chip" id="tbl-count">—</span></div>
+                </div>
+                <div id="tbl-loader" style="display:none">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Akkreditatsiya №</th>
+                                <th>Tashkilot</th>
+                                <th>Davlat</th>
+                                <th>Standart</th>
+                                <th>Status</th>
+                                <th>Tugash sanasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbl-body">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="state-box"><span class="ico spin">⏳</span>
+                                        <p>Yuklanmoqda...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pager" id="pager" style="display:none">
+                    <span class="pager-info" id="pager-info"></span>
+                    <div class="pager-btns" id="pager-btns"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-cards" style="display:none">
+            <div class="cards-grid" id="cards-grid">
+                <div class="state-box" style="grid-column:1/-1"><span class="ico spin">⏳</span></div>
+            </div>
+            <div class="pager" id="cards-pager"
+                style="display:none;margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
+                <span class="pager-info" id="cards-pager-info"></span>
+                <div class="pager-btns" id="cards-pager-btns"></div>
+            </div>
+        </div>
+
+        <div id="view-countries" style="display:none">
+            <div class="panel">
+                <div class="panel-head">
+                    <div class="panel-title">🌍 Davlatlar statistikasi <span class="count-chip" id="ctry-count">—</span>
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Davlat</th>
+                                <th>Jami</th>
+                                <th>Faol</th>
+                                <th>To'xtatilgan</th>
+                                <th>Bekor</th>
+                                <th>Ulush</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ctry-body">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="state-box"><span class="ico spin">⏳</span></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /wrap -->
+
+    <!-- ── Detail Modal ── -->
+    <div class="modal-bg" id="modal-bg" onclick="App.closeModal(event)">
+        <div class="modal" id="modal">
+            <div class="modal-head">
+                <div>
+                    <div class="modal-acc" id="m-acc"></div>
+                    <div class="modal-org" id="m-org">Yuklanmoqda...</div>
+                </div>
+                <button class="modal-close" onclick="App.closeModal(true)">✕</button>
+            </div>
+            <div id="m-loader" style="display:none">
+                <div class="loader-line"></div>
+            </div>
+            <div class="modal-body" id="m-body"></div>
+        </div>
+    </div>
+
+    <!-- <script src="/static/js/app.js"></script> -->
+</body>
+
+</html>
+

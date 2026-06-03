@@ -1,0 +1,67 @@
+/* static/css/mobile.css */
+
+@media (max-width: 768px) {
+
+    .wrap {
+        padding: 16px;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-wrap {
+        width: 100%;
+    }
+
+    .flt {
+        width: 100%;
+    }
+
+    .tab-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .panel {
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 800px;
+    }
+
+    .modal {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    @media (max-width: 768px) {
+    .pill-url {
+        display: none;
+    }
+}
+}
