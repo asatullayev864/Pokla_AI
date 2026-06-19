@@ -6,9 +6,9 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from config import BASE_URL
 from database.db import init_db, get_connection
-from crawler.scraper import run
+from crawler.hak_directory import fetch_hak_directory
+from crawler.scraper import run_for_country
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,7 +37,10 @@ def check_and_update():
     log.info("📋  Avvalgi sertifikatlar soni: %d", len(before))
 
     init_db()
-    run(BASE_URL)
+
+    directory = fetch_hak_directory()
+    for country, entries in directory.items():
+        run_for_country(country, entries)
 
     after = get_current_accreditation_numbers()
     log.info("📋  Yangi sertifikatlar soni: %d", len(after))
@@ -67,3 +70,4 @@ def check_and_update():
 
 if __name__ == "__main__":
     check_and_update()
+
