@@ -5,14 +5,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Halal Sertifikatlar — Dashboard</title>
+
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('halaltracker-theme');
+                var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#eef2ee" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet" />
-    
+
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/mobile.css">
-    
+
+    <script src="/js/theme.js"></script>
     <script src="/js/app.js"></script>
 </head>
 
@@ -33,25 +48,29 @@
             </div>
             <div class="header-right">
                 <span class="pill pill-live">Jonli</span>
-                <span class="pill pill-url" id="api-url-badge">
-                    localhost:8000/api
-                </span>
+                <span class="pill pill-url" id="api-url-badge">localhost:8000/api</span>
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Kun/tun rejimini almashtirish"
+                    onclick="ThemeManager.toggle()">
+                    <span class="tt-icon tt-sun">☀️</span>
+                    <span class="tt-icon tt-moon">🌙</span>
+                    <span class="tt-knob"></span>
+                </button>
             </div>
         </header>
 
         <!-- ── Stat Cards ── -->
         <div class="stats-row">
-            <div class="stat ani d1" style="--stat-color:var(--accent)" onclick="App.filterBy(null)" id="sc-total">
+            <div class="stat ani d1" style="--stat-color:var(--slate)" onclick="App.filterBy(null)" id="sc-total">
                 <div class="stat-arrow">→</div>
                 <div class="stat-ico">📋</div>
                 <div class="stat-label">Jami</div>
                 <div class="stat-val" id="sv-total">—</div>
                 <div class="stat-hint">Barcha sertifikatlar</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" id="sf-total" style="background:var(--accent);width:100%"></div>
+                    <div class="stat-fill" id="sf-total" style="background:var(--slate);width:100%"></div>
                 </div>
             </div>
-            <div class="stat ani d2" style="--stat-color:var(--success)" onclick="App.filterBy('active')"
+            <div class="stat ani d2" style="--stat-color:var(--halal-green)" onclick="App.filterBy('active')"
                 id="sc-active">
                 <div class="stat-arrow">→</div>
                 <div class="stat-ico">✅</div>
@@ -59,10 +78,10 @@
                 <div class="stat-val" id="sv-active">—</div>
                 <div class="stat-hint" id="sh-active">yuklanmoqda...</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" id="sf-active" style="background:var(--success)"></div>
+                    <div class="stat-fill" id="sf-active" style="background:var(--halal-green)"></div>
                 </div>
             </div>
-            <div class="stat ani d3" style="--stat-color:var(--warn)" onclick="App.filterBy('suspended')"
+            <div class="stat ani d3" style="--stat-color:var(--saffron)" onclick="App.filterBy('suspended')"
                 id="sc-suspended">
                 <div class="stat-arrow">→</div>
                 <div class="stat-ico">⏸</div>
@@ -70,10 +89,10 @@
                 <div class="stat-val" id="sv-suspended">—</div>
                 <div class="stat-hint" id="sh-suspended">yuklanmoqda...</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" id="sf-suspended" style="background:var(--warn)"></div>
+                    <div class="stat-fill" id="sf-suspended" style="background:var(--saffron)"></div>
                 </div>
             </div>
-            <div class="stat ani d4" style="--stat-color:var(--danger)" onclick="App.filterBy('withdrawn')"
+            <div class="stat ani d4" style="--stat-color:var(--ember)" onclick="App.filterBy('withdrawn')"
                 id="sc-withdrawn">
                 <div class="stat-arrow">→</div>
                 <div class="stat-ico">❌</div>
@@ -81,10 +100,10 @@
                 <div class="stat-val" id="sv-withdrawn">—</div>
                 <div class="stat-hint" id="sh-withdrawn">yuklanmoqda...</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" id="sf-withdrawn" style="background:var(--danger)"></div>
+                    <div class="stat-fill" id="sf-withdrawn" style="background:var(--ember)"></div>
                 </div>
             </div>
-            <div class="stat ani d5" style="--stat-color:var(--accent3)" onclick="App.switchView('countries')"
+            <div class="stat ani d5" style="--stat-color:var(--azure)" onclick="App.switchView('countries')"
                 id="sc-countries">
                 <div class="stat-arrow">→</div>
                 <div class="stat-ico">🌍</div>
@@ -92,7 +111,7 @@
                 <div class="stat-val" id="sv-countries">—</div>
                 <div class="stat-hint">Qamrab olingan</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" id="sf-countries" style="background:var(--accent3);width:100%"></div>
+                    <div class="stat-fill" id="sf-countries" style="background:var(--azure);width:100%"></div>
                 </div>
             </div>
         </div>
@@ -120,10 +139,16 @@
             <select class="flt" id="flt-country" onchange="App.load(1)">
                 <option value="">Barcha davlatlar</option>
             </select>
-            <div class="tab-group">
-                <button class="tab on" id="tab-list" onclick="App.switchView('list')">☰ Jadval</button>
-                <button class="tab" id="tab-cards" onclick="App.switchView('cards')">⊞ Kartalar</button>
-                <button class="tab" id="tab-countries" onclick="App.switchView('countries')">🌍 Davlatlar</button>
+
+            <!-- ── Liquid Glass Tab Group ── -->
+            <div class="liquid-tab-group" id="tabGroup" role="tablist">
+                <div class="liquid-indicator" id="tab-indicator" aria-hidden="true"></div>
+                <button class="liquid-tab on" id="tab-list" role="tab" aria-selected="true"
+                    onclick="App.switchView('list')">☰ Jadval</button>
+                <button class="liquid-tab" id="tab-cards" role="tab" aria-selected="false"
+                    onclick="App.switchView('cards')">⊞ Kartalar</button>
+                <button class="liquid-tab" id="tab-countries" role="tab" aria-selected="false"
+                    onclick="App.switchView('countries')">🌍 Davlatlar</button>
             </div>
         </div>
 
@@ -154,7 +179,8 @@
                         <tbody id="tbl-body">
                             <tr>
                                 <td colspan="6">
-                                    <div class="state-box"><span class="ico spin">⏳</span>
+                                    <div class="state-box">
+                                        <span class="ico spin">⏳</span>
                                         <p>Yuklanmoqda...</p>
                                     </div>
                                 </td>
@@ -174,7 +200,7 @@
                 <div class="state-box" style="grid-column:1/-1"><span class="ico spin">⏳</span></div>
             </div>
             <div class="pager" id="cards-pager"
-                style="display:none;margin-top:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
+                style="display:none;margin-top:16px;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius)">
                 <span class="pager-info" id="cards-pager-info"></span>
                 <div class="pager-btns" id="cards-pager-btns"></div>
             </div>
@@ -183,7 +209,8 @@
         <div id="view-countries" style="display:none">
             <div class="panel">
                 <div class="panel-head">
-                    <div class="panel-title">🌍 Davlatlar statistikasi <span class="count-chip" id="ctry-count">—</span>
+                    <div class="panel-title">🌍 Davlatlar statistikasi
+                        <span class="count-chip" id="ctry-count">—</span>
                     </div>
                 </div>
                 <div class="tbl-wrap">
@@ -229,8 +256,6 @@
         </div>
     </div>
 
-    <!-- <script src="/static/js/app.js"></script> -->
 </body>
 
 </html>
-

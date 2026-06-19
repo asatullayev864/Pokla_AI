@@ -1,15 +1,41 @@
 /* static/css/mobile.css */
 
+/* ── Global himoya: hech qanday element ekrandan tashqariga
+   chiqib, butun sahifani kattalashtirib yubormasin ── */
+html,
+body {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
 @media (max-width: 768px) {
 
+    /* Telefonlarda backdrop-filter blur radiusini kamaytiramiz —
+       ko'p frosted-glass qatlam past quvvatli qurilmalarda
+       sekinlashishi mumkin, shu bois yengilroq qiymatlar. */
+    :root {
+        --blur: 14px;
+        --blur-sm: 10px;
+    }
+
     .wrap {
-        padding: 16px;
+        padding: 14px;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
     header {
         flex-direction: column;
         gap: 15px;
         align-items: flex-start;
+        position: static;
+        /* sticky glass nav kichik ekranda joy band qilmasin */
+        top: auto;
+    }
+
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
     }
 
     .stats-row {
@@ -29,7 +55,7 @@
         width: 100%;
     }
 
-    .tab-group {
+    .liquid-tab-group {
         width: 100%;
         justify-content: space-between;
     }
@@ -38,12 +64,22 @@
         grid-template-columns: 1fr;
     }
 
+    /* ── Jadval: butun panelni kengaytirib yubormasligi uchun
+       faqat .tbl-wrap ichida gorizontal scroll bo'ladi ── */
     .panel {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .tbl-wrap {
         overflow-x: auto;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
     }
 
     table {
-        min-width: 800px;
+        min-width: 640px;
+        /* 800px o'rniga — kichik ekranlarda kamroq cho'zilsin */
     }
 
     .modal {
@@ -59,9 +95,8 @@
         grid-template-columns: 1fr;
     }
 
-    @media (max-width: 768px) {
     .pill-url {
         display: none;
     }
 }
-}
+

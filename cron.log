@@ -7,3 +7,7 @@ Python runtime state: core initialized
 
 Current thread 0x00000001ee0ee080 (most recent call first):
   <no Python frame>
+Traceback (most recent call last):
+  File "/Users/macbook/Desktop/UMUMIY/UzTest_Python/scheduler.py", line 9, in <module>
+    from config import BASE_URL
+ImportError: cannot import name 'BASE_URL' from 'config' (/Users/macbook/Desktop/UMUMIY/UzTest_Python/config.py)
