@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adminlarni boshqarish — HalalTracker</title>
+
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('halaltracker-theme');
+                var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#eef2ee" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <link rel="stylesheet" href="/css/auth.css">
+
+    <script src="/js/auth.js"></script>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="wrap">
+        <header class="ani">
+            <div class="brand">
+                <div class="brand-icon">👥</div>
+                <div>
+                    <div class="brand-name">Adminlarni boshqarish</div>
+                    <div class="brand-sub">Faqat superadmin uchun</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="pill" id="user-badge"></span>
+                <button class="header-btn" onclick="window.location.href='/index.html'">← Dashboard</button>
+                <button class="header-btn" onclick="AuthManager.logout()">🚪 Chiqish</button>
+            </div>
+        </header>
+
+        <div class="panel" style="margin-top:24px">
+            <div class="panel-head">
+                <div class="panel-title">➕ Yangi admin qo'shish</div>
+            </div>
+            <div style="padding:20px">
+                <div class="auth-error" id="form-error"></div>
+                <form id="create-form" style="display:flex; gap:12px; flex-wrap:wrap; align-items:end">
+                    <div class="auth-field" style="flex:1; min-width:160px; margin-bottom:0">
+                        <label>Login</label>
+                        <input type="text" id="new-username" required />
+                    </div>
+                    <div class="auth-field" style="flex:1; min-width:160px; margin-bottom:0">
+                        <label>Parol</label>
+                        <div class="pw-wrap">
+                            <input type="password" id="new-password" required />
+                            <button type="button" class="pw-toggle" id="pw-toggle-new" aria-label="Parolni ko'rsatish">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="auth-field" style="flex:1; min-width:160px; margin-bottom:0">
+                        <label>To'liq ism (ixtiyoriy)</label>
+                        <input type="text" id="new-fullname" />
+                    </div>
+                    <button type="submit" class="auth-btn" style="width:auto; padding:11px 24px">Qo'shish</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top:20px">
+            <div class="panel-head">
+                <div class="panel-title">📋 Adminlar ro'yxati <span class="count-chip" id="admin-count">—</span>
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Login</th>
+                            <th>Ism</th>
+                            <th>Holat</th>
+                            <th>Yaratilgan</th>
+                            <th>Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbl-body">
+                        <tr>
+                            <td colspan="5">
+                                <div class="state-box"><span class="ico spin">⏳</span></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tahrirlash modali -->
+    <div class="modal-bg" id="edit-modal-bg" style="display:none" onclick="if(event.target===this) closeEditModal()">
+        <div class="modal" style="max-width:420px">
+            <div class="modal-head">
+                <div class="modal-org">Adminni tahrirlash</div>
+                <button class="modal-close" onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="modal-body" style="padding:20px">
+                <div class="auth-error" id="edit-error"></div>
+                <input type="hidden" id="edit-id" />
+                <div class="auth-field">
+                    <label>Yangi parol (bo'sh qoldirsangiz o'zgarmaydi)</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="edit-password" />
+                        <button type="button" class="pw-toggle" id="pw-toggle-edit" aria-label="Parolni ko'rsatish">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="auth-field">
+                    <label>To'liq ism</label>
+                    <input type="text" id="edit-fullname" />
+                </div>
+                <div class="auth-field">
+                    <label><input type="checkbox" id="edit-active" style="width:auto; margin-right:6px" />
+                        Faol</label>
+                </div>
+                <button class="auth-btn" onclick="saveEdit()">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── Parolni ko'rsatish / yashirish ── */
+        function setupPasswordToggle(inputId, toggleId) {
+            const input = document.getElementById(inputId);
+            const toggle = document.getElementById(toggleId);
+            if (!input || !toggle) return;
+
+            toggle.addEventListener('click', () => {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                toggle.classList.toggle('active', isHidden);
+            });
+        }
+
+        let admins = [];
+
+        async function loadAdmins() {
+            const res = await fetch('/api/admins/');
+            if (!res.ok) return;
+            admins = await res.json();
+            renderAdmins();
+        }
+
+        function renderAdmins() {
+            const body = document.getElementById('admin-tbl-body');
+            document.getElementById('admin-count').textContent = admins.length;
+
+            if (admins.length === 0) {
+                body.innerHTML = '<tr><td colspan="5"><div class="state-box">Hali adminlar yo\'q</div></td></tr>';
+                return;
+            }
+
+            body.innerHTML = admins.map(a => `
+                <tr>
+                    <td>${a.username}</td>
+                    <td>${a.full_name || '—'}</td>
+                    <td><span class="badge-role ${a.is_active ? '' : 'badge-inactive'}">${a.is_active ? 'Faol' : 'Bloklangan'}</span></td>
+                    <td>${a.created_at ? new Date(a.created_at).toLocaleDateString('uz-UZ') : '—'}</td>
+                    <td class="admin-row-actions">
+                        <button onclick="openEditModal(${a.id})">✏️ Tahrirlash</button>
+                        <button onclick="removeAdmin(${a.id})">🗑️ O'chirish</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorBox = document.getElementById('form-error');
+            errorBox.style.display = 'none';
+
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value;
+            const full_name = document.getElementById('new-fullname').value.trim() || null;
+
+            try {
+                const res = await fetch('/api/admins/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, full_name }),
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Xatolik yuz berdi');
+                }
+                document.getElementById('create-form').reset();
+                loadAdmins();
+            } catch (err) {
+                errorBox.textContent = err.message;
+                errorBox.style.display = 'block';
+            }
+        });
+
+        function openEditModal(id) {
+            const admin = admins.find(a => a.id === id);
+            if (!admin) return;
+            document.getElementById('edit-id').value = admin.id;
+            document.getElementById('edit-password').value = '';
+            document.getElementById('edit-fullname').value = admin.full_name || '';
+            document.getElementById('edit-active').checked = admin.is_active;
+            document.getElementById('edit-error').style.display = 'none';
+            document.getElementById('edit-modal-bg').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal-bg').style.display = 'none';
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const password = document.getElementById('edit-password').value;
+            const full_name = document.getElementById('edit-fullname').value.trim();
+            const is_active = document.getElementById('edit-active').checked;
+            const errorBox = document.getElementById('edit-error');
+
+            const payload = { full_name, is_active };
+            if (password) payload.password = password;
+
+            try {
+                const res = await fetch(`/api/admins/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.detail || 'Xatolik yuz berdi');
+                }
+                closeEditModal();
+                loadAdmins();
+            } catch (err) {
+                errorBox.textContent = err.message;
+                errorBox.style.display = 'block';
+            }
+        }
+
+        async function removeAdmin(id) {
+            if (!confirm("Haqiqatan ham bu adminni o'chirmoqchimisiz?")) return;
+            const res = await fetch(`/api/admins/${id}`, { method: 'DELETE' });
+            if (res.ok || res.status === 204) {
+                loadAdmins();
+            } else {
+                alert("O'chirishda xatolik yuz berdi");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const role = AuthManager.getRole();
+            const username = AuthManager.getUsername();
+            document.getElementById('user-badge').textContent =
+                `${username} (${role === 'superadmin' ? 'Superadmin' : 'Admin'})`;
+
+            if (role !== 'superadmin') {
+                document.querySelector('.wrap').innerHTML =
+                    '<div class="state-box" style="margin-top:60px">⛔ Bu sahifaga faqat superadmin kira oladi</div>';
+                return;
+            }
+
+            setupPasswordToggle('new-password', 'pw-toggle-new');
+            setupPasswordToggle('edit-password', 'pw-toggle-edit');
+
+            loadAdmins();
+        });
+    </script>
+</body>
+
+</html>
+

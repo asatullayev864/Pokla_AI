@@ -69,6 +69,17 @@ def init_db():
             created_at             TIMESTAMP DEFAULT NOW(),
             updated_at             TIMESTAMP DEFAULT NOW()
         );
+
+        CREATE TABLE IF NOT EXISTS users (
+            id            SERIAL PRIMARY KEY,
+            username      TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            role          TEXT NOT NULL CHECK (role IN ('superadmin', 'admin')),
+            full_name     TEXT,
+            is_active     BOOLEAN DEFAULT TRUE,
+            created_at    TIMESTAMP DEFAULT NOW(),
+            updated_at    TIMESTAMP DEFAULT NOW()
+        );
     """)
     conn.commit()
     cur.close()
@@ -285,3 +296,130 @@ def print_report(country: str = None):
     cur.close()
     conn.close()
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Foydalanuvchilar (superadmin / admin) bilan ishlash
+# ──────────────────────────────────────────────────────────────────────────
+
+def get_user_by_username(username: str) -> dict | None:
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return dict(row) if row else None
+
+
+def create_user(username: str, password_hash: str, role: str, full_name: str = None) -> dict | None:
+    """Yangi foydalanuvchi (odatda admin) yaratadi. Login band bo'lsa None qaytaradi."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute("""
+            INSERT INTO users (username, password_hash, role, full_name)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, username, role, full_name, is_active, created_at, updated_at
+        """, (username, password_hash, role, full_name))
+        user = cur.fetchone()
+        conn.commit()
+        return dict(user)
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        return None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def list_admins() -> list[dict]:
+    """role='admin' bo'lgan barcha foydalanuvchilar (superadminlar ko'rinmaydi)."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT id, username, role, full_name, is_active, created_at, updated_at
+        FROM users WHERE role = 'admin' ORDER BY created_at DESC
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_admin_by_id(user_id: int) -> dict | None:
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT id, username, role, full_name, is_active, created_at, updated_at
+        FROM users WHERE id = %s AND role = 'admin'
+    """, (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return dict(row) if row else None
+
+
+def update_admin(user_id: int, password_hash: str = None, full_name: str = None, is_active: bool = None) -> dict | None:
+    fields, values = [], []
+    if password_hash is not None:
+        fields.append("password_hash = %s")
+        values.append(password_hash)
+    if full_name is not None:
+        fields.append("full_name = %s")
+        values.append(full_name)
+    if is_active is not None:
+        fields.append("is_active = %s")
+        values.append(is_active)
+
+    if not fields:
+        return get_admin_by_id(user_id)
+
+    fields.append("updated_at = NOW()")
+    values.append(user_id)
+
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(f"""
+            UPDATE users SET {", ".join(fields)}
+            WHERE id = %s AND role = 'admin'
+            RETURNING id, username, role, full_name, is_active, created_at, updated_at
+        """, values)
+        row = cur.fetchone()
+        conn.commit()
+        return dict(row) if row else None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_admin(user_id: int) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM users WHERE id = %s AND role = 'admin'", (user_id,))
+    deleted = cur.rowcount > 0
+    conn.commit()
+    cur.close()
+    conn.close()
+    return deleted
+
+
+def upsert_superadmin(username: str, password_hash: str) -> dict:
+    """Superadmin yaratadi yoki mavjudini yangilaydi (create_superadmin.py skripti uchun)."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        INSERT INTO users (username, password_hash, role)
+        VALUES (%s, %s, 'superadmin')
+        ON CONFLICT (username) DO UPDATE SET
+            password_hash = EXCLUDED.password_hash,
+            role          = 'superadmin',
+            is_active     = TRUE,
+            updated_at    = NOW()
+        RETURNING id, username, role, created_at, updated_at
+    """, (username, password_hash))
+    user = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return dict(user)

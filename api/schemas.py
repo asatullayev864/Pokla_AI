@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
 
 class ScopeItem(BaseModel):
@@ -74,4 +75,50 @@ class PaginatedResponse(BaseModel):
     page_size: int
     pages: int
     data: list[CertificateListResponse]
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Autentifikatsiya / foydalanuvchilar
+# ──────────────────────────────────────────────────────────────────────────
+
+class UserRole(str, Enum):
+    superadmin = "superadmin"
+    admin = "admin"
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    role: UserRole
+    username: str
+
+
+class AdminCreate(BaseModel):
+    username: str
+    password: str
+    full_name: Optional[str] = None
+
+
+class AdminUpdate(BaseModel):
+    password: Optional[str] = None
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class AdminResponse(BaseModel):
+    id: int
+    username: str
+    role: UserRole
+    full_name: Optional[str]
+    is_active: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
 

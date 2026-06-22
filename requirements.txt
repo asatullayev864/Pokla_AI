@@ -1,0 +1,17 @@
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.3.0
+pdfplumber==0.11.9
+python-dotenv==1.0.1
+
+# ── Autentifikatsiya uchun qo'shildi ────────────────────────────────────────
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.9
+
+# ── Loyiha allaqachon ishlatayotgan, mabodo requirements.txt da yo'q bo'lsa ─
+fastapi
+uvicorn[standard]
+psycopg2-binary
+pydantic

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kirish — HalalTracker</title>
+
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('halaltracker-theme');
+                var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta name="theme-color" content="#eef2ee" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet" />
+
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+    <div class="bg-grid"></div>
+
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-logo">🕌</div>
+            <div class="auth-title">HalalTracker</div>
+            <div class="auth-sub">Tizimga kirish uchun login va parolni kiriting</div>
+
+            <div class="auth-error" id="login-error"></div>
+
+            <form id="login-form">
+                <div class="auth-field">
+                    <label for="username">Login</label>
+                    <input type="text" id="username" autocomplete="username" required />
+                </div>
+                <div class="auth-field">
+                    <label for="password">Parol</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="password" autocomplete="current-password" required />
+                        <button type="button" class="pw-toggle" id="pw-toggle-password" aria-label="Parolni ko'rsatish">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn" id="login-btn">Kirish</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ── Parolni ko'rsatish / yashirish ── */
+        function setupPasswordToggle(inputId, toggleId) {
+            const input = document.getElementById(inputId);
+            const toggle = document.getElementById(toggleId);
+            if (!input || !toggle) return;
+
+            toggle.addEventListener('click', () => {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                toggle.classList.toggle('active', isHidden);
+            });
+        }
+        setupPasswordToggle('password', 'pw-toggle-password');
+
+        /* ── Login forma ── */
+        const form = document.getElementById('login-form');
+        const errorBox = document.getElementById('login-error');
+        const btn = document.getElementById('login-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'Tekshirilmoqda...';
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.detail || "Login yoki parol noto'g'ri");
+                }
+
+                const data = await res.json();
+                localStorage.setItem('halaltracker-token', data.access_token);
+                localStorage.setItem('halaltracker-role', data.role);
+                localStorage.setItem('halaltracker-username', data.username);
+
+                window.location.href = '/index.html';
+            } catch (err) {
+                errorBox.textContent = err.message;
+                errorBox.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Kirish';
+            }
+        });
+    </script>
+</body>
+
+</html>
+
